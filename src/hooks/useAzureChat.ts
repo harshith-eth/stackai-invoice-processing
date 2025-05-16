@@ -34,15 +34,25 @@ export const useAzureChat = () => {
   }, [setMessages, agentId])
 
   const sendMessage = useCallback(
-    async (message: string) => {
-      if (!message.trim()) return
+    async (message: string, file?: File | null) => {
+      if (!message.trim() && !file) return
 
-      // Add user message
+      // Add user message with attachment if present
       const userMessage: PlaygroundChatMessage = {
         role: 'user',
         content: message,
         created_at: Math.floor(Date.now() / 1000)
       }
+      
+      // Add attachment metadata if file is provided
+      if (file) {
+        userMessage.attachments = [{
+          name: file.name,
+          type: file.type,
+          size: file.size
+        }]
+      }
+      
       addMessage(userMessage)
 
       // Prepare agent message placeholder
@@ -83,14 +93,31 @@ export const useAzureChat = () => {
           For questions not related to invoices, politely redirect the conversation to invoice topics.`
         });
 
-        // Call Azure API
-        const response = await fetch('/api/azure-chat', {
+        // Prepare request body, include file if present
+        const requestBody: any = { messages: apiMessages };
+        
+        let requestOptions: RequestInit = {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ messages: apiMessages })
-        })
+          body: JSON.stringify(requestBody)
+        };
+        
+        // If we have a file, use FormData instead
+        if (file) {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('messages', JSON.stringify(apiMessages));
+          
+          requestOptions = {
+            method: 'POST',
+            body: formData
+          };
+        }
+
+        // Call Azure API
+        const response = await fetch('/api/azure-chat', requestOptions);
 
         if (!response.ok) {
           throw new Error(`Error: ${response.statusText}`)

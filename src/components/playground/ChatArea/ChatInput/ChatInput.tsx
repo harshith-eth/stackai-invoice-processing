@@ -49,10 +49,7 @@ const ChatInput = () => {
     try {
       // Handle Azure model separately
       if (selectedModel === 'azure') {
-        if (attachment) {
-          toast.warning('File attachments are not supported with Azure OpenAI')
-        }
-        await sendMessage(currentMessage)
+        await sendMessage(currentMessage, attachment)
       } else {
         // Use FormData to properly send both message and file
         if (attachment) {
@@ -91,9 +88,6 @@ const ChatInput = () => {
     }
   }
 
-  // Disable attachments for Azure
-  const isAzureModel = selectedModel === 'azure'
-
   return (
     <div className="relative mx-auto mb-1 flex w-full max-w-2xl flex-col items-end justify-center gap-y-2 font-geist">
       {attachment && (
@@ -129,10 +123,10 @@ const ChatInput = () => {
           size="icon"
           variant="ghost"
           className="rounded-xl border border-accent bg-primaryAccent p-2 text-primary"
-          disabled={isStreaming || isAzureModel}
-          title={isAzureModel ? "Attachments not supported with Azure" : "Attach file"}
+          disabled={isStreaming}
+          title="Attach file"
         >
-          <Icon type="plus-icon" color={isAzureModel ? "muted" : "primary"} />
+          <Icon type="plus-icon" color="primary" />
         </Button>
         
         <TextArea
