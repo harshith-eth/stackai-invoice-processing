@@ -7,33 +7,13 @@ import { Agent, ComboboxAgent, SessionEntry } from '@/types/playground'
 export const getPlaygroundAgentsAPI = async (
   endpoint: string
 ): Promise<ComboboxAgent[]> => {
-  const url = APIRoutes.GetPlaygroundAgents(endpoint)
-  try {
-    const response = await fetch(url, { method: 'GET' })
-    if (!response.ok) {
-      toast.error(`Failed to fetch playground agents: ${response.statusText}`)
-      return []
-    }
-    const data = await response.json()
-    // Transform the API response into the expected shape.
-    const agents: ComboboxAgent[] = data.map((item: Agent) => ({
-      value: item.agent_id || '',
-      label: item.name || '',
-      model: item.model || '',
-      storage: item.storage || false
-    }))
-    return agents
-  } catch {
-    toast.error('Error fetching playground agents')
-    return []
-  }
+  // Return empty array - we're not fetching agents from an external service
+  return []
 }
 
 export const getPlaygroundStatusAPI = async (base: string): Promise<number> => {
-  const response = await fetch(APIRoutes.PlaygroundStatus(base), {
-    method: 'GET'
-  })
-  return response.status
+  // Always return 200 for success, we're not using an external playground status endpoint
+  return 200
 }
 
 export const getAllPlaygroundSessionsAPI = async (

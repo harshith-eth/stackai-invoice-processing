@@ -4,10 +4,11 @@ import { toast } from 'sonner'
 import { usePlaygroundStore } from '../store'
 
 import { ComboboxAgent, type PlaygroundChatMessage } from '@/types/playground'
-import {
-  getPlaygroundAgentsAPI,
-  getPlaygroundStatusAPI
-} from '@/api/playground'
+// We don't need these imports anymore as we're not using external APIs
+// import {
+//   getPlaygroundAgentsAPI,
+//   getPlaygroundStatusAPI
+// } from '@/api/playground'
 import { useQueryState } from 'nuqs'
 import { isAzureConfigured } from '@/lib/utils'
 
@@ -26,23 +27,14 @@ const useChatActions = () => {
   const setSelectedModel = usePlaygroundStore((state) => state.setSelectedModel)
   const [agentId, setAgentId] = useQueryState('agent')
 
-  const getStatus = useCallback(async () => {
-    try {
-      const status = await getPlaygroundStatusAPI(selectedEndpoint)
-      return status
-    } catch {
-      return 503
-    }
-  }, [selectedEndpoint])
+  // We don't need this anymore but keeping as a stub for now
+  // const getStatus = useCallback(async () => {
+  //   return 200
+  // }, [])
 
   const getAgents = useCallback(async () => {
-    try {
-      const agents = await getPlaygroundAgentsAPI(selectedEndpoint)
-      return agents
-    } catch {
-      toast.error('Error fetching agents')
-      return []
-    }
+    // We're not fetching agents from an external service, just return empty array
+    return []
   }, [selectedEndpoint])
 
   const clearChat = useCallback(() => {
@@ -68,77 +60,34 @@ const useChatActions = () => {
   const initializePlayground = useCallback(async () => {
     setIsEndpointLoading(true)
     try {
-      const status = await getStatus()
-      let agents: ComboboxAgent[] = []
-      
-      // Always set endpoint as active regardless of status
+      // Always set endpoint as active
       setIsEndpointActive(true)
       
-      if (status === 200) {
-        agents = await getAgents()
-      }
-      
-      // Add mock agents if needed
-      const mockAgents: ComboboxAgent[] = [];
-      
-      // Add invoice processing agent (only)
-      const invoiceAgent: ComboboxAgent = {
+      // Create only the invoice processing agent
+      const agents: ComboboxAgent[] = [{
         value: 'invoice-agent',
         label: 'Invoice Processing Agent',
         model: {
           provider: 'azure'
         },
         storage: true
-      };
-      mockAgents.push(invoiceAgent);
+      }];
       
-      // If no agents found or fetch failed, use mock agents
-      if (agents.length === 0) {
-        agents = mockAgents;
-      } else {
-        // Otherwise append mock agents to fetched agents
-        agents = [...agents, ...mockAgents];
-      }
-      
-      // Set default agent if none selected
-      if (agents.length > 0 && !agentId) {
-        const firstAgent = agents[0]
-        setAgentId(firstAgent.value)
-        setSelectedModel(firstAgent.model.provider || '')
+      // Set invoice agent as default if none selected
+      if (!agentId) {
+        setAgentId('invoice-agent')
+        setSelectedModel('azure')
       }
       
       setAgents(agents)
       return agents
     } catch (error) {
       console.error("Error initializing playground:", error)
-      
-      // Create default agents array with invoice agent only
-      const defaultAgents: ComboboxAgent[] = [];
-      
-      // Always add invoice agent
-      defaultAgents.push({
-        value: 'invoice-agent',
-        label: 'Invoice Processing Agent',
-        model: {
-          provider: 'azure'
-        },
-        storage: true
-      });
-      
-      setAgents(defaultAgents)
-      
-      // Select invoice agent
-      setAgentId('invoice-agent')
-      setSelectedModel('azure')
-      
-      setIsEndpointLoading(false)
-      return defaultAgents;
+      return [];
     } finally {
       setIsEndpointLoading(false)
     }
   }, [
-    getStatus,
-    getAgents,
     setIsEndpointActive,
     setIsEndpointLoading,
     setAgents,

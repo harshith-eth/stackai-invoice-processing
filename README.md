@@ -53,7 +53,7 @@ pnpm dev
 
 ## Connecting to an Agent Backend
 
-By default Agent UI connects to `http://localhost:7777`. You can easily change this by hovering over the endpoint URL and clicking the edit option.
+This agent UI works directly with Azure OpenAI for invoice processing using PDF.js. No external agent backend is required.
 
 The default endpoint works with the standard Agno Playground setup described in the [official documentation](https://agno.link/agent-ui#connect-to-local-agents).
 
