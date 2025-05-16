@@ -42,3 +42,11 @@ export const getJsonMarkdown = (content: object = {}) => {
 
   return jsonBlock
 }
+
+export function isAzureConfigured(): boolean {
+  return !!(
+    process.env.AZURE_OPENAI_API_KEY &&
+    process.env.AZURE_OPENAI_ENDPOINT &&
+    process.env.AZURE_OPENAI_API_VERSION
+  )
+}

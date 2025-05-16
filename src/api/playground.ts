@@ -41,7 +41,7 @@ export const getAllPlaygroundSessionsAPI = async (
   agentId: string
 ): Promise<SessionEntry[]> => {
   // For mock agents, return empty array (sessions will be handled by useSessionLoader)
-  if (agentId === 'invoice-agent' || agentId === 'default-agent' || agentId.startsWith('invoice-')) {
+  if (agentId === 'invoice-agent' || agentId === 'default-agent' || agentId === 'azure-gpt-4o' || agentId.startsWith('invoice-')) {
     return [];
   }
   
@@ -71,7 +71,7 @@ export const getPlaygroundSessionAPI = async (
   sessionId: string
 ) => {
   // For mock agents, return an empty response structure
-  if (agentId === 'invoice-agent' || agentId === 'default-agent' || agentId.startsWith('invoice-')) {
+  if (agentId === 'invoice-agent' || agentId === 'default-agent' || agentId === 'azure-gpt-4o' || agentId.startsWith('invoice-')) {
     return {
       session_id: sessionId,
       agent_id: agentId,

@@ -93,7 +93,7 @@ export const usePlaygroundStore = create<PlaygroundStore>()(
         set(() => ({ selectedEndpoint })),
       agents: [],
       setAgents: (agents) => set({ agents }),
-      selectedModel: '',
+      selectedModel: 'azure',
       setSelectedModel: (selectedModel) => set(() => ({ selectedModel })),
       sessionsData: null,
       setSessionsData: (sessionsData) =>
@@ -111,7 +111,8 @@ export const usePlaygroundStore = create<PlaygroundStore>()(
       name: 'endpoint-storage',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        selectedEndpoint: state.selectedEndpoint
+        selectedEndpoint: state.selectedEndpoint,
+        selectedModel: state.selectedModel
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated?.()

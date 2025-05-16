@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import {
   getPlaygroundSessionAPI,
   getAllPlaygroundSessionsAPI
@@ -13,6 +13,7 @@ import {
   SessionEntry
 } from '@/types/playground'
 import { getJsonMarkdown } from '@/lib/utils'
+import { useQueryState } from 'nuqs'
 
 interface SessionResponse {
   session_id: string
@@ -82,6 +83,19 @@ const saveMockMessages = (messages: PlaygroundChatMessage[]) => {
   }
 }
 
+// Load saved messages from localStorage
+const loadSavedMessages = (): PlaygroundChatMessage[] => {
+  try {
+    const messagesJson = localStorage.getItem('mock_messages');
+    if (messagesJson) {
+      return JSON.parse(messagesJson);
+    }
+  } catch (error) {
+    console.error("Error loading saved messages:", error);
+  }
+  return [];
+}
+
 const useSessionLoader = () => {
   const setMessages = usePlaygroundStore((state) => state.setMessages)
   const messages = usePlaygroundStore((state) => state.messages)
@@ -90,6 +104,17 @@ const useSessionLoader = () => {
     (state) => state.setIsSessionsLoading
   )
   const setSessionsData = usePlaygroundStore((state) => state.setSessionsData)
+  const [agentId] = useQueryState('agent')
+  
+  // Load saved messages when the component mounts or when agentId changes
+  useEffect(() => {
+    if (agentId === 'invoice-agent' || agentId === 'azure-gpt-4o') {
+      const savedMessages = loadSavedMessages();
+      if (savedMessages.length > 0) {
+        setMessages(savedMessages);
+      }
+    }
+  }, [agentId, setMessages]);
 
   const getSessions = useCallback(
     async (agentId: string) => {
@@ -98,7 +123,7 @@ const useSessionLoader = () => {
         setIsSessionsLoading(true)
         
         // For mock agents, use local storage mock sessions
-        if (agentId === 'default-agent' || agentId === 'invoice-agent') {
+        if (agentId === 'default-agent' || agentId === 'invoice-agent' || agentId === 'azure-gpt-4o') {
           const mockSessions = getMockSessions(agentId);
           setSessionsData(mockSessions);
           return;
@@ -113,7 +138,7 @@ const useSessionLoader = () => {
       } catch (error) {
         console.error("Error loading sessions:", error);
         // On error, still try to use mock sessions
-        if (agentId === 'default-agent' || agentId === 'invoice-agent') {
+        if (agentId === 'default-agent' || agentId === 'invoice-agent' || agentId === 'azure-gpt-4o') {
           const mockSessions = getMockSessions(agentId);
           setSessionsData(mockSessions);
         } else {
@@ -133,9 +158,15 @@ const useSessionLoader = () => {
       }
 
       try {
-        // For mock agents, save current messages to localStorage
-        if (agentId === 'default-agent' || agentId === 'invoice-agent') {
-          // We don't actually load anything, but we do save current messages
+        // For mock agents, load messages from localStorage
+        if (agentId === 'default-agent' || agentId === 'invoice-agent' || agentId === 'azure-gpt-4o') {
+          // Load saved messages
+          const savedMessages = loadSavedMessages();
+          if (savedMessages.length > 0) {
+            setMessages(savedMessages);
+            return savedMessages;
+          }
+          // If no saved messages, save current messages
           saveMockMessages(messages);
           return messages;
         }

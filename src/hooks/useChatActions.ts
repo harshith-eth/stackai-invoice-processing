@@ -9,6 +9,7 @@ import {
   getPlaygroundStatusAPI
 } from '@/api/playground'
 import { useQueryState } from 'nuqs'
+import { isAzureConfigured } from '@/lib/utils'
 
 const useChatActions = () => {
   const { chatInputRef } = usePlaygroundStore()
@@ -77,17 +78,26 @@ const useChatActions = () => {
         agents = await getAgents()
       }
       
-      // If no agents found or fetch failed, create mock agents
+      // Add mock agents if needed
+      const mockAgents: ComboboxAgent[] = [];
+      
+      // Add invoice processing agent (only)
+      const invoiceAgent: ComboboxAgent = {
+        value: 'invoice-agent',
+        label: 'Invoice Processing Agent',
+        model: {
+          provider: 'azure'
+        },
+        storage: true
+      };
+      mockAgents.push(invoiceAgent);
+      
+      // If no agents found or fetch failed, use mock agents
       if (agents.length === 0) {
-        const invoiceAgent: ComboboxAgent = {
-          value: 'invoice-agent',
-          label: 'Invoice Processing Agent',
-          model: {
-            provider: 'Document AI'
-          },
-          storage: true // Enable storage for the agent
-        }
-        agents = [invoiceAgent]
+        agents = mockAgents;
+      } else {
+        // Otherwise append mock agents to fetched agents
+        agents = [...agents, ...mockAgents];
       }
       
       // Set default agent if none selected
@@ -102,22 +112,27 @@ const useChatActions = () => {
     } catch (error) {
       console.error("Error initializing playground:", error)
       
-      // Add invoice agent even on error
-      const invoiceAgent: ComboboxAgent = {
+      // Create default agents array with invoice agent only
+      const defaultAgents: ComboboxAgent[] = [];
+      
+      // Always add invoice agent
+      defaultAgents.push({
         value: 'invoice-agent',
         label: 'Invoice Processing Agent',
         model: {
-          provider: 'Document AI'
+          provider: 'azure'
         },
-        storage: true // Enable storage for the agent
-      }
+        storage: true
+      });
       
-      setAgents([invoiceAgent])
+      setAgents(defaultAgents)
+      
+      // Select invoice agent
       setAgentId('invoice-agent')
-      setSelectedModel('Document AI')
+      setSelectedModel('azure')
       
       setIsEndpointLoading(false)
-      return [invoiceAgent]
+      return defaultAgents;
     } finally {
       setIsEndpointLoading(false)
     }

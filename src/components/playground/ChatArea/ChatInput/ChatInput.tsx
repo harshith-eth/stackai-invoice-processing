@@ -5,6 +5,7 @@ import { TextArea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { usePlaygroundStore } from '@/store'
 import useAIChatStreamHandler from '@/hooks/useAIStreamHandler'
+import { useAzureChat } from '@/hooks/useAzureChat'
 import { useQueryState } from 'nuqs'
 import Icon from '@/components/ui/icon'
 
@@ -13,10 +14,12 @@ const ChatInput = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const { handleStreamResponse } = useAIChatStreamHandler()
+  const { sendMessage } = useAzureChat()
   const [selectedAgent] = useQueryState('agent')
   const [inputMessage, setInputMessage] = useState('')
   const [attachment, setAttachment] = useState<File | null>(null)
   const isStreaming = usePlaygroundStore((state) => state.isStreaming)
+  const selectedModel = usePlaygroundStore((state) => state.selectedModel)
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null
@@ -44,26 +47,34 @@ const ChatInput = () => {
     setInputMessage('')
     
     try {
-      // Use FormData to properly send both message and file
-      if (attachment) {
-        const formData = new FormData()
-        formData.append('message', currentMessage)
-        formData.append('file', attachment, attachment.name)
-        
-        // Get attachment metadata for display in the message
-        const attachmentData = {
-          name: attachment.name,
-          type: attachment.type,
-          size: attachment.size
+      // Handle Azure model separately
+      if (selectedModel === 'azure') {
+        if (attachment) {
+          toast.warning('File attachments are not supported with Azure OpenAI')
         }
-        
-        // Add to the FormData for processing on server side
-        formData.append('attachment_metadata', JSON.stringify(attachmentData))
-        
-        await handleStreamResponse(formData)
+        await sendMessage(currentMessage)
       } else {
-        // Just send the text message if no attachment
-        await handleStreamResponse(currentMessage)
+        // Use FormData to properly send both message and file
+        if (attachment) {
+          const formData = new FormData()
+          formData.append('message', currentMessage)
+          formData.append('file', attachment, attachment.name)
+          
+          // Get attachment metadata for display in the message
+          const attachmentData = {
+            name: attachment.name,
+            type: attachment.type,
+            size: attachment.size
+          }
+          
+          // Add to the FormData for processing on server side
+          formData.append('attachment_metadata', JSON.stringify(attachmentData))
+          
+          await handleStreamResponse(formData)
+        } else {
+          // Just send the text message if no attachment
+          await handleStreamResponse(currentMessage)
+        }
       }
       
       // Clear attachment after sending
@@ -79,6 +90,9 @@ const ChatInput = () => {
       )
     }
   }
+
+  // Disable attachments for Azure
+  const isAzureModel = selectedModel === 'azure'
 
   return (
     <div className="relative mx-auto mb-1 flex w-full max-w-2xl flex-col items-end justify-center gap-y-2 font-geist">
@@ -115,9 +129,10 @@ const ChatInput = () => {
           size="icon"
           variant="ghost"
           className="rounded-xl border border-accent bg-primaryAccent p-2 text-primary"
-          disabled={isStreaming}
+          disabled={isStreaming || isAzureModel}
+          title={isAzureModel ? "Attachments not supported with Azure" : "Attach file"}
         >
-          <Icon type="plus-icon" color="primary" />
+          <Icon type="plus-icon" color={isAzureModel ? "muted" : "primary"} />
         </Button>
         
         <TextArea
