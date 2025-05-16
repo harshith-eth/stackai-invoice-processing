@@ -1,0 +1,1374 @@
+=== DIRECT TEXT EXTRACTION ===
+
+--- Page 1 ---
+How to Streamline 
+Invoice Processing with 
+AI
+May 7, 2025
+Toni Lopez
+SOFTWARE ENGINEERING AT STACK AI
+Processing invoices manually makes up 62% of accounts payable tasks, with each costing between $12 to $35 in labor. 
+With potential human errors and higher risk of fraud in the mix, AI automation is poised to be a safer, faster, and more 
+efficient option.Make your organization smarter with AI.
+Deploy custom AI Assist ants, Chatbots, and Workflow Automations to make your company 10x more efficient.
+Get started o n s T e m p l a t e s C u s t o m e r s P r i c i n g B l o g R e s o u r c e s T alk
+Login
+Get a demo5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 1/14
+
+--- Page 2 ---
+Despite being a big problem, the solution is easy to build with Stack AI, a generative AI workflow automation platform. In 
+this guide, weʼll walk you through how to upload an invoice, process it with AI, and store it in database software for future 
+reference.
+Streamline invoice processing with AI
+File upload input
+For this guide, weʼll be using the Workflow Builder. Select the New Project to start from scratch. This option creates a 
+project with 3 nodes as a base:
+For this guide, we want the prompt to be an invoice file. Delete the text input by clicking the cross icon.
+On the left menu, expand the Inputs section. Then, drag and drop the Files node onto the canvas.File upload input
+Process the invoice with GPT-4o
+Save the invoice details to Airtable
+Clean the output for better user experience
+Export as a form interface•
+•
+•
+•
+•
+A text input
+A LLM node, usually set to an OpenAI model
+An output node to display the results•
+•
+•5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 2/14
+
+--- Page 3 ---
+Notice the Files node comes with the Expose as input setting activated by default. This will let your team upload files to the 
+tool once you export it. Drag the Files output handle onto the OpenAIʼs LLM input handle.
+Process the invoice with GPT-4o
+To process the invoice, weʼll use the GPT-4o model. Due to its multimodality and vision capabilities, it can accurately 
+understand images, read documents, and extract text.
+The OpenAI LLM node is already on the canvas. Make sure the GPT-4o model is selected from the dropdown.5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 3/14
+
+--- Page 4 ---
+LLM system instructions
+The model needs system instructions to understand how to process the uploaded files. Weʼve prepared a template you can 
+adapt to your needs.
+You are an expert document parser specialized in processing invoices. Your task is to extract key invoice details from the 
+raw text or OCR output of an invoice. Be accurate, consistent, and return the data so it can be written to Airtable (follow the 
+Airtable API guidelines).
+Extract the following elements. If you can't find any of these, just write "null":
+invoice number,
+invoice date,
+vendor name,
+vendor email,
+vendor phone,
+bill to,
+total amount,
+currrency,
+bank name,
+bank account number,
+description,
+invoice total5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 4/14
+
+--- Page 5 ---
+Please note that this system prompt assumes youʼll be using Airtable as data storage and the most common elements to 
+extract from an invoice. Edit these instructions according to your use case.
+LLM prompt
+The prompt will include a simple instruction to start running the action along with the document.
+Write the following in the prompt input field:
+Process this invoice:
+Then, type a forward slash, bringing up all the available data inputs. Select the Files input node from the dropdown. This 
+will pull the document into the prompt, making it available to GPT-4o for processing.
+Save the invoice details to Airtable
+For this tutorial, weʼll be storing the invoice details as a row in an Airtable base. Expand the Apps section in the left menu, 
+select the Airtable app, and drag the Write to Airtable action node onto the canvas, to the right of the LLM node.5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 5/14
+
+--- Page 6 ---
+Click the Write to Airtable node to open its settings. Click the New Connection button to begin connecting Airtable to Stack 
+AI.
+Follow the instructions in the pop up windows to successfully connect both platforms. Once complete, click the Test button 
+to check connection health.5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 6/14
+
+--- Page 7 ---
+Connect the OpenAI LLM node to Write to Airtable.
+This node needs to know what to write to Airtable. In the Inputs > Data section, type a forward slash in the input field and 
+select the LLM node.5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 7/14
+
+--- Page 8 ---
+Next, we need to target the Airtable base and table to store the information. Open the Airtable base where you want to 
+save processed invoice data. Fill the Base ID with the text right after the Airtable domain in the URL input of your browser.
+Fill out the table name where the data should be saved. This is visible in Airtableʼs user interface. Type the exact name.
+Stack AI and Airtable are now properly connected and ready to transfer data.
+Clean the output for a better user 
+experience
+At this point, youʼve built the core functionality of the tool. However, when running, your users will see a snippet of JSON 
+(JavaScript Object Notation, a notation system for safe and accurate data transmission between machines). Letʼs improve 
+user experience by providing a message indicating whether the action completed successfully or not.
+Expand the LLMs section. Drag and drop another OpenAI node onto the canvas, to the right of the Write to Airtable node.5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 8/14
+
+--- Page 9 ---
+Connect the Write to Airtable action to the new OpenAI LLM.
+The GPT-4o Mini model is a good match for this task, as it doesnʼt require a high level of intelligence. Use these system 
+instructions as a template to interpret the output of the Write to Airtable action.
+You're a message formatter.
+If the user message has any content, format it in a list format to show that an invoice was successfully saved.
+If the user message has no content, state that there was an error while saving the invoice.5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 9/14
+
+--- Page 10 ---
+Provide a prompt containing the data from the Write to Airtable action. Write the following in the prompt input field:
+User Message:
+Then, type a forward slash to open the data sources dropdown. Add the Write to Airtable (Record ID). Repeat the process 
+to add the Write to Airtable (Fields) data.
+Connect this LLM to the output. Its response will be exposed to the user, letting them know the status of the processing 
+task.5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 10/14
+
+--- Page 11 ---
+Export as a form interface
+Click the Publish button at the top right to save your project.
+Click the Export tab at the top left of the screen.5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 11/14
+
+--- Page 12 ---
+This screen will let you configure how the tool looks like to your users. Start by changing the app name and the description.
+Rename the input fieldʼs alias to Upload invoice. This will update the label on the interface.
+Scroll all the way down the settings to find the Security controls. You can set up password protection, SSO and access 
+control to protect this interface from unauthorized use. Edit these settings as needed.5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 12/14
+
+--- Page 13 ---
+Click the Save Interface button at the top right to save changes. These will now be available on the toolʼs interface.
+Share and improve
+Share the tool with your team by copying the Published Interface link and pasting in in an email or message.
+ARTICLES
+Dive into similar Articles
+Function Calling in LLMs
+Function Calling in LLMs5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 13/14
+
+--- Page 14 ---
+Explore usage in the Analytics tab. Here youʼll be able to see total runs, number of users, errors, tokens consumed, as well 
+as a list of all runs. You can generate an AI report of all data and download logs for further analysis.
+Reduce invoice processing time
+Invoice processing is a time-consuming task, a waste of your finance teamʼs brainpower. Automating it with AI reduces 
+costs, improves accuracy, and reclaims your teamʼs mental space so they can use their skills elsewhere. Sign up for a free 
+Stack AI account and discover other use cases you can automate:
+How to Build a Claims Processor AI Agent
+How to Convert Blog Post to Video with AI
+How to Build an RFP Response Agent•
+•
+•
+How to Build Snowflake AI Agent
+How to Build Sno wflake AI Agent
+How to Build Postgres AI Agent
+How to Build Postgres AI Agent
+ ss Subscr ibe
+SOLUTIONS
+Enterprise
+Startups
+Agencies
+AI Agents
+AI Workflow Automations
+AI Chatbots
+Healthcare
+Operations
+Education
+Government SUPPORT
+Pricing
+Documentation
+Tutorials
+Status Page
+Changelog COMPANY
+Blog
+Careers
+Affiliate Program
+Stack AI Certified
+Security LEG
+Priv
+Ter
+Ref
+Op
+Ant
+SO
+Sig
+hts reserved
+Made with
+by PhDs at
+All Systems Operational5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 14/14
+
+
+=== OCR TEXT FROM IMAGES ===
+
+--- Page 1 (OCR) ---
+5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+
+& StackAl ons Templates Customers Pricing Blog Resources Talk — Login
+
+Streamline Invoice
+Processing with Al
+
++
+
+-
+
+How to Streamline
+
+Invoice Processing with
+Al
+
+May 7, 2025
+
+Toni Lopez
+SOFTWARE ENGINEERING AT STACK AI
+
+Make your organization smarter with Al.
+
+Deploy custom Al Assistants, Chatbots, and Workflow Automations to make your company 10x more efficient.
+
+Processing invoices manually makes up 62% of accounts payable tasks, with each costing between $12 to $35 in labor.
+
+With potential human errors and higher risk of fraud in the mix, Al automation is poised to be a safer, faster, and more
+efficient option.
+
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 1/14
+
+
+--- Page 2 (OCR) ---
+5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+Despite being a big problem, the solution is easy to build with Stack Al, a generative Al workflow automation platform. In
+this guide, we'll walk you through how to upload an invoice, process it with Al, and store it in database software for future
+reference.
+
+Streamline invoice processing with Al
+
+e File upload input
+
+e Process the invoice with GPT-4o0
+
+e Save the invoice details to Airtable
+
+e Clean the output for better user experience
+e Export as a form interface
+
+File upload input
+
+For this guide, we'll be using the Workflow Builder. Select the New Project to start from scratch. This option creates a
+project with 3 nodes as a base:
+
+e =A text input
+e ALLM node, usually set to an OpenAl model
+e An output node to display the results
+
+For this guide, we want the prompt to be an invoice file. Delete the text input by clicking the cross icon.
+
+Ge StackAl Workflow Expo alytics Manager “) Guides | Streamline invoice processing with Al @{) 8 See versions 8 Share b> Run Save Publish
+Q Search Nodes
+& Inputs v
+t v ‘
+ch Outputs Al Assistant
+@ LLMs v Output
+
+User Message Click "> Run" to try it out! What the user sees!
+© Knowledge Bases v
+
+4 Apps v @. Textinput io BZ ok] G OpendAl u»-0 BOex @. Output cur-0 BOex
+
+What are you capable of? : Large Language Model Formatted @O) Gt, downloes
+
+Document Readers v
+the Lar
+
+<P Logic v @ OPT-t0 Mini Fata
+@ Utils v Instructions.
+f
+4
+Prompt
+we dat 7 '
+eat
+User Message: 2 ca
+°
+. I
+Q ewe sane J Too
+Ss .
+og
+98
+@® Help & More Oo ast Published minute ago © @ Auto-saved draft 12:52:30
+
+On the left menu, expand the Inputs section. Then, drag and drop the Files node onto the canvas.
+
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 2/14
+
+
+--- Page 3 (OCR) ---
+5/16/25, 6:50 PM
+
+& StackAl Workflow
+
+Q Search Nodes
+
+ct, Inputs nN
+@. Input =
+-) Files i
+4 Tigger = |B Files se-0
+o URL i
+@ Audio =
+@ Image =
+it Outputs v
+@ LLMs v
+© Knowledge Bases v
+4 Apps v
+© Document Readers v
+<P> Logic v
+@ Utils v
+Q
+Q
+S
+a
+88
+@® Help & More oo ast Published 3minutesago  @ Auto-sav aft 12:54:37
+
+Notice the Files node comes with the Expose as input setting activated by default. This will let your team upload files to the
+
+[5 Guides | Streamline invoice processing with Al @{) 9 See versions
+
+How to Streamline Invoice Processing with AI
+
+@ share Run Save
+
+G OpenAl 210-0 Oex @. Output our
+Large Language Model Formatted @)
+@ oPr-to me
+Instructions
+! : 5
+6
+Prompt
+eat
+o
+
+Tools
+
++ Add Too!
+
+tool once you export it. Drag the Files output handle onto the OpenAl's LLM input handle.
+
+|B Files doc-0
+
+jpeg, .jpg, .mp4, mp3, etc.)
+
+(pdf, doc, .docx, txt, xlsx, .csv, .md, .pr
+
+How to manage documents via API
+
+@) Expose as input
+
+Last Published 4 minutes ago @ Auto-saved draft 12:55:43
+
+OI
+
+Large Language Model Completion
+
+G OpenAl 2n-0
+
+Select the Large La Model (LLM) you want to us
+
+@ CPT-4o Mini Fastest
+
+Instructions
+Tell the Al how you'd like it to respond. You can include personality, tone, instructions, and more.
+
+Keep the instructions short.
+
+You are an Al assistant.
+
+1) Be brief.
+
+2) Be polite. eo
+3) Be helpful.
+
+Prompt
+
+The data sent in each m
+
+age. Add data from « des by typing "/" and selecting the node
+
+You are not using any of the available input nodes: [) Files
+
+Add nodes by typing "/" in either Instructions or Prompt.
+
+Edit Formatted
+
+Tools
++ Add Tool
+Add tools to enhance your LLM workflow.
+
+Witokens © 15s
+
+Process the invoice with GPT-4o0
+
+To process the invoice, we'll use the GPT-40 model. Due to its multimodality and vision capabilities, it can accurately
+
+understand images, read documents, and extract text.
+
+The OpenAl LLM node is already on the canvas. Make sure the GPT-40 model is selected from the dropdown.
+
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai
+
+3/14
+
+
+--- Page 4 (OCR) ---
+5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+
+G& StackAl Workflow Export Analytics Manager 2) Guides | Streamline invoice processing with Al @{) © See versions @ share > Run Save
+Files doc-o BOex ; G OpenAl u0-0 2Oex @ Output to 2Oex
+
+toa Large Language Mode! Completion Formatted @Q) G Download: @ cow
+
+You are not using any of the available input nodes: (S Fie:
+‘Add nodes by typing */* in either Instructions or Prompt.
+
+Eat Formatted
+
+oO Last Published 5 minutes ago — @ Auto-saved draft 12:57:09
+
+LLM system instructions
+
+The model needs system instructions to understand how to process the uploaded files. We've prepared a template you can
+adapt to your needs.
+
+You are an expert document parser specialized in processing invoices. Your task is to extract key invoice details from the
+raw text or OCR output of an invoice. Be accurate, consistent, and return the data so it can be written to Airtable (follow the
+Airtable API guidelines).
+
+Extract the following elements. If you can't find any of these, just write "null":
+invoice number,
+invoice date,
+
+vendor name,
+
+vendor email,
+
+vendor phone,
+
+bill to,
+
+total amount,
+currrency,
+
+bank name,
+
+bank account number,
+description,
+
+invoice total
+
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 4/14
+
+
+--- Page 5 (OCR) ---
+Please note that this system prompt assumes you'll be using Airtable as data storage and the most common elements to
+
+extract from an invoice. Edit these instructions according to your use case.
+
+LLM prompt
+
+5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+Ge StackAl Workfiow Exp Analytics Manager Guides | Streamline invoice processing with Al @{) © See versions 8 Share > Run
+2) Files soc-0 @ex G Openal 49-0 @2@Oex @ Output our-0 B2Oex
+ot Large Language Model Ge) Formats © Gt Downtoas § Que
+an
+Prompt
+You ae not using any ofthe avaiable Input nodes: isd
+& Add nodes by typing */* in either Instructions or Prompt.
+can
+5
+>
+Q
+Tools
+Q ; ; aa
+3 °
+88
+o Last Published 7 minutes ago  @ Auto-saved draft 12:59:06
+
+The prompt will include a simple instruction to start running the action along with the document.
+
+Write the following in the prompt input field:
+
+Process this invoice:
+
+Then, type a forward slash, bringing up all the available data inputs. Select the Files input node from the dropdown. This
+
+will pull the document into the prompt, making it available to GPT-4o for processing.
+
+Prompt
+
+Add data from other nodes by typing "/" and selecting the node
+
+You are not using any
+
+Add nodes by typing "
+
+of the available input nodes: Files
+/" in either Instructions or Prompt.
+
+Edit Formatted
+
+Process this invoice: |
+
+oN
+
+,
+
+\ Press arrow keys to navigate
+
+Tools
+
+Add tools to enhance your LL
+
++ Add Too!
+M workflow
+
+13itokens = @ 15s
+
+Save the invoice details to Airtable
+
+For this tutorial, we'll be storing the invoice details as a row in an Airtable base. Expand the Apps section in the left menu,
+select the Airtable app, and drag the Write to Airtable action node onto the canvas, to the right of the LLM node.
+
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai
+
+5/14
+
+
+--- Page 6 (OCR) ---
+5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+
+G& StackAl Workflow Export Analytics Manager ©) Guides | Streamline invoice processing with Al @{) © See versions @ share p> Run Save
+
+Q Search Nodes
+
+& Inputs v
+& Outputs v
+@ UMs v
+© Knowledge Bases . [» wiwwsrae i |
+4 Apps A ~ ve we ~
+Missing required paramaters and needs
+* Airtable a ‘Amtabe connection
+
+* Query Airtable =
+
+@ A\golia v - == Large Language Mode!
+A Azure SQL v © corso Font
+Q BigQuery . ee et ny
+© PrP 0se 35 input eop the instrtions short
+K Exa al v bit,
+M Gmail v .
+B GSheets v |
+HubSpot v
+% p
+2s (212220 any am aan put nodes
+
+& Knowledge Base v «9 */* in other Instructions © Prowat
+
+-
+BB Linkedin v
+
+Q
+@ Make v
+
+Q °
+1 MongodB v
+
+MySQL v
+
+fea}
+WW Notion v pee .
+
+es Ad tools uM
+~« Oracle v cess
+
+o Last Published 1hourago  @ Auto-saved draft 14:15:41
+'® Outlook v
+
+Click the Write to Airtable node to open its settings. Click the New Connection button to begin connecting Airtable to Stack
+Al.
+
+f& Guides / Streamline invoice processing with Al . @) © See versions () Share > Run Save Publish
+
+» Write to Airtable — action-o G@ x
+a
+»» Airtable 7
+*» Write to Airtable °
+
+Description
+
+Write data to an Airtable base using natural language
+
+© @x OI (at | wite to airtabte ' © Airtable connection required
+
+Completion
+
+Write data to an Airtable base using nat... This tool requires a Airtable connection to work.
+You will need to configure it before using.
+
+LM) you want to use.
+
+& Missing required parameters and needs
+Airtable connection
+
+nd. You can include personality, tone, instructions, and more @ Connect Airtable A
+Select Connection
+6
+| Select a conn: S
+4 data from other nodes by typing "/" and selecting the node 5) Inputs a
++ available input nodes: §} Files
+either Instructions or Prompt. Data * © Required field
+The data to write to Airtable in natural language
+as format
+
+Follow the instructions in the pop up windows to successfully connect both platforms. Once complete, click the Test button
+to check connection health.
+
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 6/14
+
+
+--- Page 7 (OCR) ---
+5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+
+» Write to Airtable —action-o CG xX
+
+»» Airtable
+
+°
+
+*» Write to Airtable
+
+°
+
+Description
+
+Write data to an Airtable base using natural language
+
+| © Write to Airtable Oo @ Connect Airtable a
+
+stlon
+
+Write data to an Airtable base using nat.
+
+© 0.00 sec .
+S} Inputs A
+Data * © Required field
+
+The data to write to Airtable in natural language
+format
+
+X
+
+Connect the OpenAl LLM node to Write to Airtable.
+
+G Openal 11-0 2O sx
+
+=» Write to Airtable
+
+Large Language Model . : .
+Write data to an Airtable base using nat...
+Select the Large Language Model (LLM) you want to use.
+@ GPT-4oMini Fastest : Q Missing required parameters
+© 0.00 sec
+Instructions
+
+Tell the Al how you'd like it to respond. You can include personality, tone, instructions, and more.
+Keep the instructions short.
+
+bill to, a
+total amount,
+
+currency, ry
+bank name,
+
+bank account number,
+
+description,
+
+invoice total Po
+
+Prompt
+
+The data sent in each message. Add data from other nodes by typing "/* and selecting the node.
+
+4
+
+You are not using any of the available input nodes: & Files
+Add nodes by typing "/* in either Instructions or Prompt.
+
+Edit Formatted
+
+Process this invoice: / ra
+o
+4
+Tools
++ Add Tool
+
+Add tools to enhance your LLM workflow.
+
+e
+Success’ Witokens «= O1Ss
+
+This node needs to know what to write to Airtable. In the Inputs > Data section, type a forward slash in the input field and
+select the LLM node.
+
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai TN4
+
+
+--- Page 8 (OCR) ---
+5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+
+» Write to Airtable — action-o @ x
+
+*» Airtable ¢
+
+*» Write to Airtable 7
+
+Description
+
+Write data to an Airtable base using natural language
+
+()| *® Write to Airtable : |0
+
+avai @ Connect Airtable a
+
+Write data to an Airtable base using nat.
+
+Mi d te . .
+Ase eres ees Select Co... Test Disconnect New Connection
+_
+
+Airtable $
+
+S Inputs A
+
+Data *
+
+The data to write to Airtable in natural language
+format
+
+_ “4 \ Press arrow keys to navigate .
+B. ___squired field
+
+The ID of the Airtable base to write to
+
+Next, we need to target the Airtable base and table to store the information. Open the Airtable base where you want to
+save processed invoice data. Fill the Base ID with the text right after the Airtable domain in the URL input of your browser.
+
+086 airtable.con
+
+SB Invoices ~ data —Automations _nterfaces
+
+Table 1 ¥ Add or import
+
+idview  ¥ WHidefields = Filter C)Group 1 sort color =I 7 Shareand sync
+
+A Name * Notes 2 Assignee
+
+Stack Al and Airtable are now properly connected and ready to transfer data.
+
+Clean the output for a better user
+experience
+
+At this point, you've built the core functionality of the tool. However, when running, your users will see a snippet of JSON
+(JavaScript Object Notation, a notation system for safe and accurate data transmission between machines). Let's improve
+user experience by providing a message indicating whether the action completed successfully or not.
+
+Expand the LLMs section. Drag and drop another OpenAl node onto the canvas, to the right of the Write to Airtable node.
+
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai
+
+8/14
+
+
+--- Page 9 (OCR) ---
+5/16/25, 6:50 PM
+
+& StackAl Workflow
+
+Q Search Nodes
+
+Inputs
+& Outputs
+® LUMs
+
+G Openal
+
+A\ Anthropic
+
+© Google
+
+OO Meta
+
+XAl
+
+fd Mistral
+
+EB Perpiexity
+
+© TogetherAl
+
+@ Cerebras
+
+GH repiicate
+
+Groq
+
+A Azure
+
+2s Bedrock
+
+© Local
+
+<P) Text-to-SQL
+© Knowledge Bases
+4 Apps
+
+© Document Readers
+
+Export Analytics Manager
+
+G openal ane
+
+9 O27
+
+Large Language Model
+
+© Guides | Streamline invoice processing with Al @{) © See versions
+
+How to Streamline Invoice Processing with AI
+
+@ share > Run
+
+Sve
+
+vate to Aitable
+
+Connect the Write to Airtable action to the new OpenAl LLM.
+
+The GPT-40 Mini model is a good match for this task, as it doesn’t require a high level of intelligence. Use these system
+
+= Write to Airtable
+
+Write data to an Airtable base using nat...
+
+© 0.00 sec
+
+ OpenaAl1 1-1 O@8x.
+
+Large Language Model
+
+Select the Large Language Model (LLM) you want to use.
+
+@ GPT-4o Mini Fastest
+
+Instructions
+
+Tell the Al how you'd like it to respond. You can include personality, tone, instructions, and more
+Keep the instructions short.
+
+You're a message formatter.
+If the user message has any content, format it in a list format to show that an invoice was
+successfully saved. o
+
+Prompt
+The data sent in each message. Add data from other nodes by typing "/" and selecting the node
+
+You are not using any of the available input nodes: +» write to Airtable @ Openal | [) Files
+
+ray
+
+Add nodes by typing "/* in either Instructions or Prompt.
+
+Edit
+
+User Message:
+
+Tools
+Add tools to enhance your LLM workflow.
+
++ Add Tool
+
+00s
+
+instructions as a template to interpret the output of the Write to Airtable action.
+
+You're a message formatter.
+
+If the user message has any content, format it in a list format to show that an invoice was successfully saved.
+
+If the user message has no content, state that there was an error while saving the invoice.
+
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai
+
+9/14
+
+
+--- Page 10 (OCR) ---
+5/16/25, 6:50 PM
+
+G OpenAl1 10-1
+
+e using nat...
+
+How to Streamline Invoice Processing with AI
+
+Large Language Model
+
+Select the Large Language Model (LLM) you want to use.
+
+G GPT-40 Mini Fastest
+
+Instructions
+
+Tell the Al how you'd like it to respond. You can include personality, tone, instructions, and more.
+
+You're a message formatter.
+If the user message has any content, format it in a list format to show that an invoice was
+
+successfully saved.
+If the user message has no content, state that there was an error while saving the invoice.
+
+2O sx
+
+Prompt
+The data sent in each message. Add data from other nodes by typing "/" and selecting the node.
+
+You are not using any of the available input nodes: + Write to Aitabie @ penal |B Files
+
+4
+
+Add nodes by typing "/" in either Instructions or Prompt.
+
+Edit
+
+User Message:
+
+Tools
+Add tools to enhance your LLM workflow.
+
+Q00s
+
++ Add Tool
+
+Provide a prompt containing the data from the Write to Airtable action. Write the following in the prompt input field:
+
+User Message:
+
+Then, type a forward slash to open the data sources dropdown. Add the Write to Airtable (Record ID). Repeat the process
+
+to add the Write to Airtable (Fields) data.
+
+base using nat...
+
+9 29 7F
+
+Connect this LLM to the output. Its response will be exposed to the user, letting them know the status of the processing
+
+task.
+
+Large Language Model
+
+Select the Large Language Model (LLM) you want to use.
+@ GPT-4o Mini Fastest
+
+Instructions
+
+Tell the Al how you'd like it to respond. You can include personality, tone, instructions, and more.
+Keep the instructions short.
+
+You're a message formatter.
+If the user message has any content, format it in a list format to show that an invoice was
+
+If the user message has no content, state that there was an error while saving the invoice.
+
+Prompt
+The data sent in each message. Add data from other nodes by typing "/" and selecting the node.
+
+Edit
+
+G Openal1 22-1 BOSx|
+
+successfully saved. 9
+
+User Message: + Write to Airtable (Record 1D) 4
+
+-
+Fields dict *» Write to Airtable
+
+The fields that were *» Write to Airtable (Record ID)
+
+written to Airtable
+= Write to Airtable (Fields)
+
+Files
+
+Tools
+Add tools to enhance your LLM workflow. @ Openal
+
+oe 4 \ Press arrow keys to navigate
+
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai
+
+@. Outpt
+
+Formatted (
+
+@ Output
+Formatted @&
+
+10/14
+
+
+--- Page 11 (OCR) ---
+5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+
+G OpenAl1 10-2 @. Output out-o @2Oex
+
+nae Large Language Model Formatted @) ©  & Download :  @ Clear
+Select the Large Language Model (LLM) yo!
+G GPT-40 Mini | Fastest
+Instructions
+0.05
+
+w you'd like it to respond. You can inc
+
+one, instructions, and
+
+structions short
+
+You're a message formatter. es
+If the user message has any content, format it in a list format to show that an invoice was
+successfully saved. oe
+If the user message has no content, state that there was an error while saving the invoice.
+
+Prompt
+The data sent in each message. Add data from other nodes by and selecting the node.
+Edit
+User Message: * Write to Airtable (Record ID) / Kid
+v
+Tools
++ Add Tool
+Add tools to enhance your LLM workflow
+0.08
+
+Export as a form interface
+
+Click the Publish button at the top right to save your project.
+
+& StackAl Workflow © e } Guides | Streamline invoice processing with Al @{) 8 See versions () Share > Run Save
+Q Search Nodes
+
+& Inputs ”
+
+& Outputs v
+
+® LiMs A
+
+G Openal =
+A\ Anthropic =
+© Google =
+
+O Meta =
+ms noex @ o woex 2 oma BOOX
+
+XAl = : a mn . “ a
+Keil Mistral = < — core
+
+9 Perplexity =
+
+©) TogetherAl =
+
+@ Cerebras = A =
+
+Replicate =
+By croq =
+A Azure =
+
+avs Bedrock
+
+@ Local =
+<I> Text-to-SQL = -
+© Knowledge Bases v Q
+4 Apps v Q
+Document Readers v s
+<P Logic v a
+© Utils oa 85
+@® Help & More ao Last Published 2hours ago  @ Auto-saved draft 15:22:52
+
+Click the Export tab at the top left of the screen.
+
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 11/14
+
+
+--- Page 12 (OCR) ---
+5/16/25, 6:50 PM
+
+& StackAl Workflow Analytics | Manager
+
+Q Search Nodes (
+4 Inputs v
+ct Outputs v
+®, LLMs A
+
+G Openal
+
+A\ Anthropic
+
+® Google
+
+This screen will let you configure how the tool looks like to your users. Start by changing the app name and the description.
+
+@& StackAl Workflow Export Analytics Manager
+
+& Form
+
+General
+Name
+
+Al invoice processor
+
+Description
+
+Upload an invoice and click submit. The invoice will be processed with Al and
+added to our Airtable invoice data.
+
+Fields
+
+© inputs
+
+Node ID Alias (optional) Required Options i
+
+§ 2c Files
+
+© outputs
+
+Node ID Alias (optional)
+
+E out-0 Output
+
+Style A
+Avatar
+
+eb _
+
+Rename the input field's alias to Upload invoice.
+
+@& StackAl Workflow Export Analytics + Manager
+
+& Form
+
+General a
+Name
+
+Al invoice processor
+
+Description
+
+Upload an invoice and click submit. The invoice will be processed with Al and
+added to our Airtable invoice data.
+
+Fields a
+
+© Inputs
+
+Node ID Alias (optional) Required Options i
+© opus —_
+
+Node ID Alias (optional)
+
+F out-0 Output
+
+style a
+
+Avatar
+
+Remove
+Suggested size is 64 x 64
+
+Submit button text
+
+How to Streamline Invoice Processing with AI
+
+f Guides Streamline invoice processing with Al r @)
+
+[5 Guides | Streamline invoice processing with Al Save Interface
+
+</> Embed
+-ai.com/form/d8276 5-b12: e-816a- 4 ®
+ms
+Al invoice processor
+Upload an invoice and click submit. The invoice will be processed with Al and added
+to our Airtable invoice data.
+Files
+,
+Output {© — & Download
+.
+
+This will update the label on the interface.
+
+[5 Guides / Streamline invoice processing with Al (e) Save Interface
+
+<P> Embed
+
+Al invoice processor
+
+Upload an invoice and click submit. The invoice will be processed with Al and added
+to our Airtable invoice data.
+
+Upload invoice
+
+Output (© — & Download
+
+Scroll all the way down the settings to find the Security controls. You can set up password protection, SSO and access
+
+control to protect this interface from unauthorized use. Edit these settings as needed.
+
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai
+
+12/14
+
+
+--- Page 13 (OCR) ---
+5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+
+G@ StackAl Workflow Export Analytics Manager ©) Guides | Streamline invoice processing with Al (=) Save Interface
+
+& Form </> Embed
+
+| BS ps://www.stack-ai.com/form/d8276663-9d75-4805-b12d-d675d9c80784/7571dcac-3dd6-47ee-8f6a-a2411c237f7e/6818a64088a70ed88e835 ©
+
+Submit
+
+Configuration
+
+@
+
+Authenticate to access interface
+
+Password
+
+Sign in with SSO
+
+®
+
+Custom Subdomain
+
+Click the Save Interface button at the top right to save changes. These will now be available on the tool's interface.
+
+G& StackAl Workflow Export Analytics Manager } Guides | Streamline invoice processing with Al (e) save interface |
+
+D
+& Form _ <P> Embed
+" Draft Previer
+
+sbmit b t
+Submit
+Configuration (S)
+Security A B
+orrrrrrrs Edit . .
+Authenticate to access interface
+
+Password
+
+®
+
+Emails Psion
+
+Sign in with SSO
+
+https://example.com/chatbot https://yourwebsite.com/user/profile/forms
+
+ARTICLES
+
+Dive into similar Articles
+
+Function Calling in
+LLMs
+
+Function Calling in LLMs
+Function Calling in LLMs
+
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai 13/14
+
+
+--- Page 14 (OCR) ---
+5/16/25, 6:50 PM How to Streamline Invoice Processing with AI
+
+Build Snowflake > R
+
+Al Agent all
+
+How to Build Snowflake Al Agent
+How to Build Snowflake Al Agent
+
+Build Postgres Al Agent |_—=o |
+—
+
++
+How to Build Postgres Al Agent
+
+How to Build Postgres Al Agent
+
+© Load New Logs
+
+SOLUTIONS SUPPORT COMPANY
+
+Blog
+a
+
+Reduce invoicé processing time“.
+
+AE
+
+Al Chatbots
+
+e How to Build a Claims Processor Al Agent
+éalthcare
+
+e How to Convert Blog Post to Video with Al
+
+e How to Build an RFP Response AgentOPerations
+tackAl = =
+) Government
+
+nts reserved Made with by PhDs at [lli7
+
+https://www.stack-ai.com/blog/how-to-streamline-invoice-processing-with-ai
+
+SS HIPAA ee _ Agencies ; Tutorials Affiliate Program
+In¥orweupracessing is a time-consuming task, a waste of your finance team’s brainpower. Automating it with Al reduces
+
+costs, improves accuracy, and reclaims yOuAGES mental space so they AYRE Air skills elsewhers. Si Gente? q free
+Stack Al account and discover other use édsWonflowoA atcirations Changelog Security
+
+LEC
+Pri
+Tel
+Re’
+
+{e)
+
+p
+An
+so
+Sic
+
+All Systems Operational
+
+14/14
+
+

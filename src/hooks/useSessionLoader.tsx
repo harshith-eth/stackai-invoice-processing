@@ -9,7 +9,8 @@ import {
   PlaygroundChatMessage,
   ToolCall,
   ReasoningMessage,
-  ChatEntry
+  ChatEntry,
+  SessionEntry
 } from '@/types/playground'
 import { getJsonMarkdown } from '@/lib/utils'
 
@@ -25,8 +26,65 @@ interface SessionResponse {
   agent_data: Record<string, unknown>
 }
 
+// Helper to create mock sessions from localStorage
+const getMockSessions = (agentId: string): SessionEntry[] => {
+  try {
+    // Check if we have messages in the store
+    const messagesJson = localStorage.getItem('mock_messages');
+    if (!messagesJson) return [];
+    
+    const messages: PlaygroundChatMessage[] = JSON.parse(messagesJson);
+    if (!messages.length) return [];
+    
+    // Group messages by timestamp (simulating sessions)
+    const sessionGroups: { [key: string]: PlaygroundChatMessage[] } = {};
+    
+    messages.forEach(msg => {
+      // Generate a session ID based on the day
+      const timestamp = msg.created_at || Math.floor(Date.now() / 1000);
+      const date = new Date(timestamp * 1000);
+      const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      
+      if (!sessionGroups[dateKey]) {
+        sessionGroups[dateKey] = [];
+      }
+      
+      sessionGroups[dateKey].push(msg);
+    });
+    
+    // Convert to SessionEntry format
+    return Object.entries(sessionGroups).map(([dateKey, msgs], index) => {
+      // Get the latest message for the summary
+      const latestMsg = msgs.reduce((latest, msg) => {
+        const msgTime = msg.created_at || 0;
+        const latestTime = latest.created_at || 0;
+        return msgTime > latestTime ? msg : latest;
+      }, msgs[0]);
+      
+      return {
+        session_id: `mock-session-${index}`,
+        title: `Chat from ${new Date(latestMsg.created_at * 1000).toLocaleDateString()}`,
+        created_at: latestMsg.created_at || Math.floor(Date.now() / 1000)
+      };
+    });
+  } catch (error) {
+    console.error("Error loading mock sessions:", error);
+    return [];
+  }
+}
+
+// Save messages to localStorage to maintain simple history
+const saveMockMessages = (messages: PlaygroundChatMessage[]) => {
+  try {
+    localStorage.setItem('mock_messages', JSON.stringify(messages));
+  } catch (error) {
+    console.error("Error saving mock messages:", error);
+  }
+}
+
 const useSessionLoader = () => {
   const setMessages = usePlaygroundStore((state) => state.setMessages)
+  const messages = usePlaygroundStore((state) => state.messages)
   const selectedEndpoint = usePlaygroundStore((state) => state.selectedEndpoint)
   const setIsSessionsLoading = usePlaygroundStore(
     (state) => state.setIsSessionsLoading
@@ -38,13 +96,29 @@ const useSessionLoader = () => {
       if (!agentId || !selectedEndpoint) return
       try {
         setIsSessionsLoading(true)
+        
+        // For mock agents, use local storage mock sessions
+        if (agentId === 'default-agent' || agentId === 'invoice-agent') {
+          const mockSessions = getMockSessions(agentId);
+          setSessionsData(mockSessions);
+          return;
+        }
+        
+        // For real agents, use the API
         const sessions = await getAllPlaygroundSessionsAPI(
           selectedEndpoint,
           agentId
         )
         setSessionsData(sessions)
-      } catch {
-        toast.error('Error loading sessions')
+      } catch (error) {
+        console.error("Error loading sessions:", error);
+        // On error, still try to use mock sessions
+        if (agentId === 'default-agent' || agentId === 'invoice-agent') {
+          const mockSessions = getMockSessions(agentId);
+          setSessionsData(mockSessions);
+        } else {
+          toast.error('Error loading sessions')
+        }
       } finally {
         setIsSessionsLoading(false)
       }
@@ -59,6 +133,14 @@ const useSessionLoader = () => {
       }
 
       try {
+        // For mock agents, save current messages to localStorage
+        if (agentId === 'default-agent' || agentId === 'invoice-agent') {
+          // We don't actually load anything, but we do save current messages
+          saveMockMessages(messages);
+          return messages;
+        }
+        
+        // For real agents, use the API
         const response = (await getPlaygroundSessionAPI(
           selectedEndpoint,
           agentId,
@@ -148,11 +230,12 @@ const useSessionLoader = () => {
             return processedMessages
           }
         }
-      } catch {
+      } catch (error) {
+        console.error("Error loading session:", error);
         return null
       }
     },
-    [selectedEndpoint, setMessages]
+    [selectedEndpoint, setMessages, messages]
   )
 
   return { getSession, getSessions }

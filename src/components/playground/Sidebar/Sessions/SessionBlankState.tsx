@@ -100,19 +100,7 @@ const SessionBlankState = () => {
       case !agentId:
         return 'Select an agent to see the history.'
       case !hasStorage:
-        return (
-          <>
-            Connect{' '}
-            <Link
-              className="underline"
-              href={'https://docs.agno.com/storage'}
-              target="_blank"
-            >
-              storage
-            </Link>{' '}
-            to your agent to see sessions.{' '}
-          </>
-        )
+        return 'No chat history available yet. Start a conversation to begin.'
       default:
         return 'No session records yet. Start a conversation to create one.'
     }

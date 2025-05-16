@@ -50,12 +50,12 @@ const ChatInput = () => {
           }
         }}
         className="w-full border border-accent bg-primaryAccent px-4 text-sm text-primary focus:border-accent"
-        disabled={!selectedAgent}
+        disabled={false}
         ref={chatInputRef}
       />
       <Button
         onClick={handleSubmit}
-        disabled={!selectedAgent || !inputMessage.trim() || isStreaming}
+        disabled={!inputMessage.trim() || isStreaming}
         size="icon"
         className="rounded-xl bg-primary p-5 text-primaryAccent"
       >

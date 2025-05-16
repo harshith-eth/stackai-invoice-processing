@@ -69,21 +69,55 @@ const useChatActions = () => {
     try {
       const status = await getStatus()
       let agents: ComboboxAgent[] = []
+      
+      // Always set endpoint as active regardless of status
+      setIsEndpointActive(true)
+      
       if (status === 200) {
-        setIsEndpointActive(true)
         agents = await getAgents()
-        if (agents.length > 0 && !agentId) {
-          const firstAgent = agents[0]
-          setAgentId(firstAgent.value)
-          setSelectedModel(firstAgent.model.provider || '')
-        }
-      } else {
-        setIsEndpointActive(false)
       }
+      
+      // If no agents found or fetch failed, create mock agents
+      if (agents.length === 0) {
+        const invoiceAgent: ComboboxAgent = {
+          value: 'invoice-agent',
+          label: 'Invoice Processing Agent',
+          model: {
+            provider: 'Document AI'
+          },
+          storage: true // Enable storage for the agent
+        }
+        agents = [invoiceAgent]
+      }
+      
+      // Set default agent if none selected
+      if (agents.length > 0 && !agentId) {
+        const firstAgent = agents[0]
+        setAgentId(firstAgent.value)
+        setSelectedModel(firstAgent.model.provider || '')
+      }
+      
       setAgents(agents)
       return agents
-    } catch {
+    } catch (error) {
+      console.error("Error initializing playground:", error)
+      
+      // Add invoice agent even on error
+      const invoiceAgent: ComboboxAgent = {
+        value: 'invoice-agent',
+        label: 'Invoice Processing Agent',
+        model: {
+          provider: 'Document AI'
+        },
+        storage: true // Enable storage for the agent
+      }
+      
+      setAgents([invoiceAgent])
+      setAgentId('invoice-agent')
+      setSelectedModel('Document AI')
+      
       setIsEndpointLoading(false)
+      return [invoiceAgent]
     } finally {
       setIsEndpointLoading(false)
     }

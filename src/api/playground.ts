@@ -40,6 +40,11 @@ export const getAllPlaygroundSessionsAPI = async (
   base: string,
   agentId: string
 ): Promise<SessionEntry[]> => {
+  // For mock agents, return empty array (sessions will be handled by useSessionLoader)
+  if (agentId === 'invoice-agent' || agentId === 'default-agent' || agentId.startsWith('invoice-')) {
+    return [];
+  }
+  
   try {
     const response = await fetch(
       APIRoutes.GetPlaygroundSessions(base, agentId),
@@ -65,6 +70,21 @@ export const getPlaygroundSessionAPI = async (
   agentId: string,
   sessionId: string
 ) => {
+  // For mock agents, return an empty response structure
+  if (agentId === 'invoice-agent' || agentId === 'default-agent' || agentId.startsWith('invoice-')) {
+    return {
+      session_id: sessionId,
+      agent_id: agentId,
+      user_id: null,
+      memory: {
+        runs: [],
+        chats: []
+      },
+      agent_data: {}
+    };
+  }
+  
+  // For real agents, make the API call
   const response = await fetch(
     APIRoutes.GetPlaygroundSession(base, agentId, sessionId),
     {
