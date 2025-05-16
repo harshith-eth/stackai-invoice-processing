@@ -93,26 +93,39 @@ export const useAzureChat = () => {
           For questions not related to invoices, politely redirect the conversation to invoice topics.`
         });
 
-        // Prepare request body, include file if present
-        const requestBody: any = { messages: apiMessages };
+        let requestOptions: RequestInit;
         
-        let requestOptions: RequestInit = {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(requestBody)
-        };
-        
-        // If we have a file, use FormData instead
+        // If we have a file, use FormData
         if (file) {
           const formData = new FormData();
           formData.append('file', file);
           formData.append('messages', JSON.stringify(apiMessages));
           
+          // Enable OCR for image files related to invoices or if the message asks for text extraction
+          const shouldPerformOcr = (
+            file.type.startsWith('image/') && 
+            (message.toLowerCase().includes('invoice') || 
+             message.toLowerCase().includes('extract') ||
+             message.toLowerCase().includes('ocr') ||
+             agentId === 'invoice-agent')
+          );
+          
+          if (shouldPerformOcr) {
+            formData.append('performOcr', 'true');
+          }
+          
           requestOptions = {
             method: 'POST',
             body: formData
+          };
+        } else {
+          // Otherwise use JSON
+          requestOptions = {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ messages: apiMessages })
           };
         }
 
