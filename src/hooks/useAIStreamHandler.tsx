@@ -11,6 +11,12 @@ import { ToolCall } from '@/types/playground'
 import { useQueryState } from 'nuqs'
 import { getJsonMarkdown } from '@/lib/utils'
 
+interface FileMetadata {
+  name?: string;
+  size?: number;
+  type?: string;
+}
+
 // Helper function to save messages to localStorage
 const saveMessagesToLocalStorage = (messages: PlaygroundChatMessage[]) => {
   try {
@@ -148,15 +154,17 @@ const useAIChatStreamHandler = () => {
           let isImageOrScan = false;
           
           // Parse metadata if available
-          let fileMetadata: any = null;
+          let fileMetadata: FileMetadata | null = null;
           if (attachmentMetadata) {
             try {
               fileMetadata = JSON.parse(attachmentMetadata as string);
-              isImageOrScan = file && 
+              isImageOrScan = Boolean(
+                file && 
                 (file.type.includes('image') || 
                 (fileMetadata?.name?.toLowerCase().includes('.pdf') && 
                 fileMetadata?.size && 
-                fileMetadata?.size < 100000)); // Small PDFs are often scans
+                fileMetadata?.size < 100000))
+              ); // Small PDFs are often scans
             } catch (error) {
               console.error("Error parsing attachment metadata:", error);
             }

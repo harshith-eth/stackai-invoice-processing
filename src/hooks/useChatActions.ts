@@ -35,7 +35,7 @@ const useChatActions = () => {
   const getAgents = useCallback(async () => {
     // We're not fetching agents from an external service, just return empty array
     return []
-  }, [selectedEndpoint])
+  }, [])
 
   const clearChat = useCallback(() => {
     setMessages([])
