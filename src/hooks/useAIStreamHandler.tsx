@@ -144,37 +144,50 @@ const useAIChatStreamHandler = () => {
           let mockResponse = "";
           const hasAttachment = file && attachmentMetadata;
           
-          if (hasAttachment) {
+          // Check if attachment is a PDF or image that might need OCR
+          let isImageOrScan = false;
+          
+          // Parse metadata if available
+          let fileMetadata: any = null;
+          if (attachmentMetadata) {
             try {
-              const metadata = JSON.parse(attachmentMetadata as string);
-              const fileName = metadata.name;
-              
-              mockResponse = `I've received the file "${fileName}" and analyzed it. `;
-              
-              if (fileName.toLowerCase().includes("invoice")) {
-                mockResponse += `This appears to be an invoice with the following details:
-
-- Invoice #: INV-${Math.floor(Math.random() * 10000)}
-- Date: ${new Date().toLocaleDateString()}
-- Amount: $${Math.floor(Math.random() * 10000) + 100}.00
-- Due date: ${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString()}
-
-Would you like me to extract more details or process this for payment?`;
-              } else {
-                mockResponse += `This looks like a document that may contain financial information. Would you like me to:
-                
-1. Extract key data points
-2. Summarize the content
-3. Compare it with previous records
-4. Process it for payment
-
-Let me know how you'd like to proceed!`;
-              }
+              fileMetadata = JSON.parse(attachmentMetadata as string);
+              isImageOrScan = file && 
+                (file.type.includes('image') || 
+                (fileMetadata?.name?.toLowerCase().includes('.pdf') && 
+                fileMetadata?.size && 
+                fileMetadata?.size < 100000)); // Small PDFs are often scans
             } catch (error) {
               console.error("Error parsing attachment metadata:", error);
-              mockResponse = `I've received your file, but I'm having trouble processing it. Could you provide some details about what you'd like me to do with this document?`;
             }
-          } else if (userMessage.toLowerCase().includes("invoice") || userMessage.toLowerCase().includes("process")) {
+          }
+          
+          if (isImageOrScan) {
+            mockResponse = `It seems there was an issue extracting the text from your PDF invoice. This can happen if the invoice is scanned as an image without OCR (Optical Character Recognition) applied, or if it is password-protected or in an unsupported format.
+
+Here's how you can proceed:
+
+Option 1: Upload a Clearer Version
+Try uploading a high-quality version of the invoice where text is selectable. If your invoice is scanned, you can use OCR software to convert it into machine-readable text.
+
+Option 2: Manual Entry
+If uploading a new version isn't possible, you can manually provide the following key details:
+
+1. Invoice Number
+2. Invoice Date
+3. Total Amount
+4. Vendor or Company Name
+5. Line Items (Products/Services, Quantity, Price)
+6. Tax Information (if applicable)
+
+Once you provide this data, I can assist with categorization, validation, or generating a report.
+
+Option 3: Convert the Invoice
+If the PDF is password-protected or encrypted, you may need to remove the password. You can also try converting the PDF to a Word document or plain text format using tools like Adobe Acrobat, SmallPDF, or online converters.
+
+Let me know how you'd like to proceed! I'm here to help.`;
+          }
+          else if (userMessage.toLowerCase().includes("invoice") || userMessage.toLowerCase().includes("process")) {
             mockResponse = `I'm ready to help with your invoice. `;
             
             if (!hasAttachment) {

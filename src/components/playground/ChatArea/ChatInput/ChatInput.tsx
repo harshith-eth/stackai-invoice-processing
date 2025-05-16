@@ -21,11 +21,49 @@ const ChatInput = () => {
   const isStreaming = usePlaygroundStore((state) => state.isStreaming)
   const selectedModel = usePlaygroundStore((state) => state.selectedModel)
   
+  // Check if the current agent is the invoice agent
+  const isInvoiceAgent = selectedAgent === 'invoice-agent'
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null
     if (file) {
       setAttachment(file)
-      toast.success(`Attached: ${file.name}`)
+      
+      // For invoice agent, add specific format tips
+      if (isInvoiceAgent) {
+        // Check file type for possible issues with PDFs
+        if (file.type === 'application/pdf') {
+          toast.success(`Invoice attached: ${file.name}`, {
+            description: "PDF detected. The AI will attempt to extract text. If it's a scanned document, OCR will be applied automatically."
+          })
+          
+          // Add a hint about extraction to the input field if empty
+          if (!inputMessage) {
+            setInputMessage("Please process this invoice and extract all relevant information.");
+          }
+        } else if (file.type.startsWith('image/')) {
+          toast.success(`Invoice image attached: ${file.name}`, {
+            description: "Image detected. OCR will be used to extract text. For best results, ensure the image is clear and well-lit."
+          })
+          
+          // Add a hint about extraction to the input field if empty
+          if (!inputMessage) {
+            setInputMessage("Please extract the invoice details from this image.");
+          }
+        } else if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+          toast.success(`Text file attached: ${file.name}`, {
+            description: "Text file detected. The content will be processed directly."
+          })
+        } else if (file.type.includes('word') || file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+          toast.success(`Document attached: ${file.name}`, {
+            description: "Document detected. Text will be extracted for processing."
+          })
+        } else {
+          toast.success(`File attached: ${file.name}`)
+        }
+      } else {
+        toast.success(`Attached: ${file.name}`)
+      }
     }
   }
   
@@ -37,6 +75,12 @@ const ChatInput = () => {
   }
   
   const handleAttachClick = () => {
+    if (isInvoiceAgent) {
+      toast.info("Upload an invoice", {
+        description: "Supported formats: PDF, images (JPG, PNG), text files, and Word documents. PDFs with selectable text work best.",
+        duration: 4000
+      });
+    }
     fileInputRef.current?.click()
   }
   
@@ -96,6 +140,12 @@ const ChatInput = () => {
             <div className="flex items-center gap-2 text-sm">
               <Icon type="sheet" color="primary" />
               <span className="truncate">{attachment.name}</span>
+              {isInvoiceAgent && attachment.type === 'application/pdf' && (
+                <span className="text-xs text-muted-foreground">(OCR enabled)</span>
+              )}
+              {isInvoiceAgent && attachment.type.startsWith('image/') && (
+                <span className="text-xs text-muted-foreground">(OCR enabled)</span>
+              )}
             </div>
             <Button 
               variant="ghost" 
@@ -109,13 +159,27 @@ const ChatInput = () => {
         </div>
       )}
       
+      {isInvoiceAgent && !attachment && (
+        <div className="mb-1 w-full rounded-md border border-accent bg-primaryAccent/30 p-2 text-xs text-muted-foreground">
+          <p className="font-medium text-primary">Invoice Processing Assistant</p>
+          <p>Upload an invoice file using the clip icon. For best results:</p>
+          <ul className="mt-1 list-disc pl-5">
+            <li>PDFs with selectable text work best</li>
+            <li>Clear, well-lit images will improve OCR accuracy</li>
+            <li>Scanned documents will be processed with OCR automatically</li>
+          </ul>
+        </div>
+      )}
+      
       <div className="flex w-full items-end gap-x-2">
         <input 
           type="file" 
           ref={fileInputRef}
           onChange={handleFileChange}
           className="hidden"
-          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+          accept={isInvoiceAgent ? 
+            ".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png" : 
+            ".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.mp3,.mp4,.wav"}
         />
         
         <Button
@@ -124,13 +188,13 @@ const ChatInput = () => {
           variant="ghost"
           className="rounded-xl border border-accent bg-primaryAccent p-2 text-primary"
           disabled={isStreaming}
-          title="Attach file"
+          title={isInvoiceAgent ? "Attach invoice file" : "Attach file"}
         >
           <Icon type="plus-icon" color="primary" />
         </Button>
         
         <TextArea
-          placeholder={'Ask anything'}
+          placeholder={isInvoiceAgent ? 'Ask about invoice processing or upload a file' : 'Ask anything'}
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={(e) => {

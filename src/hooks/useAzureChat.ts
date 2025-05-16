@@ -101,17 +101,39 @@ export const useAzureChat = () => {
           formData.append('file', file);
           formData.append('messages', JSON.stringify(apiMessages));
           
-          // Enable OCR for image files related to invoices or if the message asks for text extraction
+          // Enable OCR for all image files and PDFs when using invoice-agent
+          // Or if message specifically requests extraction
           const shouldPerformOcr = (
-            file.type.startsWith('image/') && 
+            (file.type.startsWith('image/') || file.type === 'application/pdf') && 
             (message.toLowerCase().includes('invoice') || 
              message.toLowerCase().includes('extract') ||
              message.toLowerCase().includes('ocr') ||
              agentId === 'invoice-agent')
           );
           
+          // Add additional OCR settings for improved performance with invoices
           if (shouldPerformOcr) {
             formData.append('performOcr', 'true');
+            
+            // Add enhanced OCR settings for invoice processing
+            const ocrSettings = {
+              enhancedMode: true,
+              languages: ['eng'],
+              detectOrientation: true,
+              scale: 2.0, // Higher scale for better text recognition
+              oem: 3, // LSTM + Legacy engine
+              extraArgs: '-c preserve_interword_spaces=1 -c textord_heavy_nr=1'
+            };
+            
+            formData.append('ocrSettings', JSON.stringify(ocrSettings));
+            
+            // Add a hint about file type to help backend processing
+            if (file.type === 'application/pdf') {
+              formData.append('fileType', 'pdf');
+              formData.append('isPDFScannedInvoice', 'possible'); // Flag for special handling
+            } else if (file.type.startsWith('image/')) {
+              formData.append('fileType', 'image');
+            }
           }
           
           requestOptions = {
@@ -186,6 +208,39 @@ export const useAzureChat = () => {
                 }
               } catch (e) {
                 console.error('Error parsing SSE JSON:', e)
+                // Improved error handling - try to sanitize the JSON string
+                try {
+                  // Check if there's an issue with trailing commas or malformed properties
+                  const sanitizedJsonStr = jsonStr
+                    .replace(/,\s*}/g, '}') // Remove trailing commas before closing curly braces
+                    .replace(/,\s*\]/g, ']') // Remove trailing commas before closing brackets
+                    .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":') // Ensure property names are quoted
+                  
+                  const json = JSON.parse(sanitizedJsonStr)
+                  const content = json.choices?.[0]?.delta?.content || ''
+                  if (content) {
+                    responseText += content
+                    
+                    // Update the message in state using the setter function
+                    setMessages((prevMessages) => {
+                      const updatedMessages = prevMessages.map((msg, idx) => 
+                        idx === prevMessages.length - 1
+                          ? { ...msg, content: responseText }
+                          : msg
+                      );
+                        
+                      // Save updated messages to localStorage
+                      if (agentId === 'invoice-agent') {
+                        saveMessagesToLocalStorage(updatedMessages);
+                      }
+                        
+                      return updatedMessages;
+                    });
+                  }
+                } catch (sanitizeError) {
+                  console.error('Even sanitized JSON parsing failed:', sanitizeError)
+                  // Just continue to next chunk if parsing fails completely
+                }
               }
             }
           }

@@ -1,84 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createAzureAuthHeaders, getAzureOpenAIEndpoint } from '@/lib/azure'
 import { createWorker } from 'tesseract.js'
+import extractTextFromPDF from '@/lib/custom-pdf'
 
 // Define types for message content structures
 interface Message {
   role: string;
   content: string;
-}
-
-// Helper function to extract text from PDF buffer
-async function extractTextFromPDF(pdfBuffer: ArrayBuffer): Promise<string> {
-  try {
-    // Only import PDF.js when actually processing a PDF
-    // PDF.js Node.js polyfills
-    // @ts-ignore - Polyfill for DOMMatrix which is browser-only
-    global.DOMMatrix = class {
-      a: number; b: number; c: number; d: number; e: number; f: number;
-      
-      constructor(transform?: number[]) {
-        if (transform) {
-          this.a = transform[0];
-          this.b = transform[1];
-          this.c = transform[2];
-          this.d = transform[3];
-          this.e = transform[4];
-          this.f = transform[5];
-        } else {
-          this.a = 1; this.d = 1;
-          this.b = 0; this.c = 0; this.e = 0; this.f = 0;
-        }
-      }
-    };
-    
-    // Dynamically import PDF.js only when needed
-    const pdfjsLib = await import('pdfjs-dist');
-    
-    // Load the PDF document using the binary data without worker
-    const loadingTask = pdfjsLib.getDocument({
-      data: new Uint8Array(pdfBuffer),
-      // Disable worker to prevent issues in server environment
-      useWorkerFetch: false,
-      isEvalSupported: false,
-      disableFontFace: true
-    });
-    
-    const pdf = await loadingTask.promise;
-    
-    let extractedText = '';
-    
-    // Get total number of pages
-    const numPages = pdf.numPages;
-    console.log(`PDF loaded with ${numPages} pages`);
-    
-    // Extract text from each page
-    for (let i = 1; i <= Math.min(numPages, 20); i++) { // Limit to 20 pages to prevent timeouts
-      try {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        
-        // Concatenate the text items
-        const pageText = textContent.items
-          .map((item: any) => item.str)
-          .join(' ');
-        
-        extractedText += `--- Page ${i} ---\n${pageText}\n\n`;
-      } catch (pageError) {
-        console.error(`Error extracting text from PDF page ${i}:`, pageError);
-        extractedText += `--- Page ${i} ---\nError extracting text from this page.\n\n`;
-      }
-    }
-    
-    if (numPages > 20) {
-      extractedText += `\n(Note: Only the first 20 pages were processed due to size limitations.)\n`;
-    }
-    
-    return extractedText.trim() || 'No text could be extracted from this PDF.';
-  } catch (error) {
-    console.error('Error extracting text from PDF:', error);
-    return 'Error extracting text from PDF. This PDF may be encrypted, damaged, or in a format that cannot be processed.';
-  }
 }
 
 // Helper function to detect if text appears to be an invoice
@@ -137,17 +65,36 @@ export async function POST(request: Request) {
           if (fileType.startsWith('image/')) {
             // Always perform OCR for images (critical for invoices)
             try {
-              console.log('Performing OCR on image...');
+              console.log('==================== OCR PROCESSING START ====================');
+              console.log(`Processing image file: ${fileName} (${file.size} bytes, type: ${fileType})`);
+              
               // Create a binary blob from the buffer for Tesseract
               const blob = new Blob([new Uint8Array(fileBuffer)], { type: fileType });
+              console.log('Image blob created for OCR processing');
               
-              // Create a worker and recognize text from the image
+              // Create a worker for OCR processing (simple version without custom logger to avoid type errors)
+              console.log('Initializing Tesseract OCR worker...');
               const worker = await createWorker();
-              const result = await worker.recognize(blob);
-              const extractedText = result.data.text;
-              await worker.terminate();
               
+              console.log('Starting OCR text recognition...');
+              const result = await worker.recognize(blob);
+              
+              // Get the extracted text
+              const extractedText = result.data.text;
+              
+              // Log results for debugging
               console.log('OCR completed successfully');
+              if (result.data.confidence) {
+                console.log(`OCR confidence: ${result.data.confidence.toFixed(2)}%`);
+              }
+              
+              // Log a sample of extracted text for debugging
+              const textPreview = extractedText.substring(0, 100) + (extractedText.length > 100 ? '...' : '');
+              console.log(`Extracted text preview: "${textPreview}"`);
+              console.log(`Total characters extracted: ${extractedText.length}`);
+              
+              await worker.terminate();
+              console.log('OCR worker terminated');
               
               // Format the text extraction results
               const textContent = typeof lastMessage.content === 'string' ? lastMessage.content : '';
@@ -161,6 +108,7 @@ export async function POST(request: Request) {
               
               // If this appears to be an invoice, add a note for the AI
               if (detectInvoiceContent(extractedText, fileName)) {
+                console.log('Invoice content detected, adding extraction prompts');
                 updatedMessage += "\n\nThis appears to be an invoice. Please extract relevant information such as:";
                 updatedMessage += "\n- Invoice number";
                 updatedMessage += "\n- Date";
@@ -175,14 +123,26 @@ export async function POST(request: Request) {
                 ...lastMessage,
                 content: updatedMessage
               };
-            } catch (ocrError) {
-              console.error('OCR failed:', ocrError);
+              
+              console.log('==================== OCR PROCESSING COMPLETE ====================');
+            } catch (error) {
+              console.error('==================== OCR PROCESSING FAILED ====================');
+              console.error(`OCR Error: ${error instanceof Error ? error.message : String(error)}`);
+              if (error instanceof Error && error.stack) {
+                console.error(`OCR Error stack: ${error.stack}`);
+              }
               
               // Even if OCR fails, we should still inform the user
               const textContent = typeof lastMessage.content === 'string' ? lastMessage.content : '';
               let updatedMessage = textContent ? 
-                `${textContent}\n\nI tried to extract text from your image "${fileName}" but OCR failed.` :
-                `I tried to extract text from your image "${fileName}" but OCR failed.`;
+                `${textContent}\n\nI tried to extract text from your image "${fileName}" but OCR failed. The system encountered an error during processing.` :
+                `I tried to extract text from your image "${fileName}" but OCR failed. The system encountered an error during processing.`;
+                
+              updatedMessage += `\n\nFor better results with invoice images:
+1. Ensure the image is clear and well-lit
+2. Make sure text is readable and not blurry
+3. Try uploading a higher resolution image
+4. Consider converting the document to a text format`;
               
               // Replace the last message
               messages[messages.length - 1] = {
@@ -222,19 +182,27 @@ export async function POST(request: Request) {
           }
           else if (fileType === 'application/pdf') {
             try {
-              console.log('Extracting text from PDF...');
+              console.log('==================== PDF PROCESSING START ====================');
+              console.log(`Processing PDF file: ${fileName} (${file.size} bytes)`);
               
               // Extract text from the PDF using the updated function
               let extractedText = '';
               try {
+                console.log('Calling PDF extraction function...');
                 extractedText = await extractTextFromPDF(fileBuffer);
-                console.log('PDF text extraction completed');
+                console.log('PDF text extraction completed successfully');
+                
+                // Log text sample for debugging
+                const textPreview = extractedText.substring(0, 100) + (extractedText.length > 100 ? '...' : '');
+                console.log(`Extracted text preview: "${textPreview}"`);
+                console.log(`Total characters extracted: ${extractedText.length}`);
               } catch (pdfExtractError) {
                 console.error('PDF extraction internal error:', pdfExtractError);
                 extractedText = 'Error: PDF text extraction failed. The PDF might be encrypted or in an unsupported format.';
               }
               
               // Format the extracted text
+              console.log('Formatting extracted text with context...');
               const userText = typeof lastMessage.content === 'string' ? lastMessage.content : '';
               let updatedMessage = '';
               
@@ -246,6 +214,7 @@ export async function POST(request: Request) {
               
               // If this appears to be an invoice, add a note for the AI
               if (detectInvoiceContent(extractedText, fileName)) {
+                console.log('Invoice content detected, adding extraction prompts');
                 updatedMessage += "\n\nThis appears to be an invoice. Please extract relevant information such as:";
                 updatedMessage += "\n- Invoice number";
                 updatedMessage += "\n- Date";
@@ -260,8 +229,14 @@ export async function POST(request: Request) {
                 ...lastMessage,
                 content: updatedMessage
               };
+              
+              console.log('==================== PDF PROCESSING COMPLETE ====================');
             } catch (pdfError) {
-              console.error('PDF handling failed completely:', pdfError);
+              console.error('==================== PDF PROCESSING FAILED ====================');
+              console.error(`PDF Error: ${pdfError instanceof Error ? pdfError.message : String(pdfError)}`);
+              if (pdfError instanceof Error && pdfError.stack) {
+                console.error(`PDF Error stack: ${pdfError.stack}`);
+              }
               
               // If PDF extraction fails completely, inform the user
               const userText = typeof lastMessage.content === 'string' ? lastMessage.content : '';
@@ -271,7 +246,31 @@ export async function POST(request: Request) {
                 `${userText}\n\n` : 
                 '';
                 
-              updatedMessage += `I've received your PDF file "${fileName}" (${fileSizeKB}KB) but had trouble extracting the text. This PDF might be encrypted, password-protected, or in a format that cannot be processed.`;
+              updatedMessage += `It seems the system encountered an error while extracting data from the uploaded PDF invoice. This could be due to the file being encrypted, scanned, or in a format that's not compatible with automated processing. Here's what you can do to help me assist you better:
+
+Options to Proceed:
+
+1. Manual Entry: Provide the invoice details manually, such as:
+   • Invoice number
+   • Invoice date
+   • Total amount
+   • Vendor/Company
+   • Line items (individual charges)
+   • Tax information
+
+2. Re-upload in a Different Format: Convert the invoice to a different format, such as:
+   • Export the invoice to a plain text file or Word document.
+   • Save the scanned invoice as a higher-quality PDF, ensuring text is selectable.
+   • If it's password-protected, remove the password (if authorized to do so) and re-upload.
+
+3. Upload a Clear Image: If scanning is required, upload a clear image of the invoice. Ensure the text is legible, as OCR tools can process such images better.
+
+How to Upload:
+• Locate the upload button in the system.
+• Choose the revised document or file format.
+• Submit it for processing, and I'll help you extract the required details.
+
+Let me know how you'd like to proceed!`;
               
               // Replace the last message
               messages[messages.length - 1] = {
