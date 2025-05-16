@@ -2,6 +2,7 @@ import Icon from '@/components/ui/icon'
 import MarkdownRenderer from '@/components/ui/typography/MarkdownRenderer'
 import { usePlaygroundStore } from '@/store'
 import type { PlaygroundChatMessage } from '@/types/playground'
+import type { IconType } from '@/components/ui/icon/types'
 import Videos from './Multimedia/Videos'
 import Images from './Multimedia/Images'
 import Audios from './Multimedia/Audios'
@@ -78,6 +79,11 @@ const AgentMessage = ({ message }: MessageProps) => {
   )
 }
 
+const getFileIcon = (fileType: string): IconType => {
+  // Always return a valid IconType
+  return 'sheet';
+};
+
 const UserMessage = memo(({ message }: MessageProps) => {
   return (
     <div className="flex items-start pt-4 text-start max-md:break-words">
@@ -85,8 +91,24 @@ const UserMessage = memo(({ message }: MessageProps) => {
         <p className="flex items-center gap-x-2 text-sm font-medium text-muted">
           <Icon type="user" size="sm" />
         </p>
-        <div className="text-md rounded-lg py-1 font-geist text-secondary">
-          {message.content}
+        <div className="flex flex-col gap-2">
+          <div className="text-md rounded-lg py-1 font-geist text-secondary">
+            {message.content}
+          </div>
+          
+          {message.attachments && message.attachments.length > 0 && (
+            <div className="flex items-center gap-2 rounded-md border border-accent bg-primaryAccent p-2 text-sm">
+              <Icon type={getFileIcon(message.attachments[0].type)} size="xs" color="primary" />
+              <div className="flex flex-col">
+                <span className="font-medium text-primary truncate max-w-[200px]">
+                  {message.attachments[0].name}
+                </span>
+                <span className="text-xs text-muted">
+                  {(message.attachments[0].size / 1024).toFixed(1)} KB · {message.attachments[0].type.split('/')[1]}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

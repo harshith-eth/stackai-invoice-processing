@@ -153,6 +153,14 @@ export interface PlaygroundChatMessage {
   videos?: VideoData[]
   audio?: AudioData[]
   response_audio?: ResponseAudio
+  attachments?: AttachmentData[]
+}
+
+export interface AttachmentData {
+  name: string
+  type: string
+  size: number
+  url?: string
 }
 
 export interface ComboboxAgent {

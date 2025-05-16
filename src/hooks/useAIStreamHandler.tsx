@@ -4,7 +4,7 @@ import { APIRoutes } from '@/api/routes'
 
 import useChatActions from '@/hooks/useChatActions'
 import { usePlaygroundStore } from '../store'
-import { RunEvent, type RunResponse, PlaygroundChatMessage } from '@/types/playground'
+import { RunEvent, type RunResponse, PlaygroundChatMessage, AttachmentData } from '@/types/playground'
 import { constructEndpointUrl } from '@/lib/constructEndpointUrl'
 import useAIResponseStream from './useAIResponseStream'
 import { ToolCall } from '@/types/playground'
@@ -77,13 +77,30 @@ const useAIChatStreamHandler = () => {
       // Get user message from form data
       const userMessage = formData.get('message') as string;
       const currentTime = Math.floor(Date.now() / 1000);
-
-      // Add user message
-      addMessage({
+      
+      // Check for file attachment
+      const file = formData.get('file') as File | null;
+      const attachmentMetadata = formData.get('attachment_metadata') as string | null;
+      
+      // Create message object
+      const messageObj: PlaygroundChatMessage = {
         role: 'user',
         content: userMessage,
         created_at: currentTime
-      })
+      };
+      
+      // Add attachment data if present
+      if (file && attachmentMetadata) {
+        try {
+          const metadata = JSON.parse(attachmentMetadata) as AttachmentData;
+          messageObj.attachments = [metadata];
+        } catch (error) {
+          console.error('Failed to parse attachment metadata:', error);
+        }
+      }
+
+      // Add user message
+      addMessage(messageObj);
 
       // Add initial agent message
       addMessage({
@@ -123,10 +140,19 @@ const useAIChatStreamHandler = () => {
             });
           }
           
-          // Generate an invoice-specific mock response
+          // Generate an invoice-specific mock response that references attachments if present
           let mockResponse = "";
-          if (userMessage.toLowerCase().includes("invoice") || userMessage.toLowerCase().includes("process")) {
-            mockResponse = `I've analyzed the invoice details. This appears to be from ${userMessage.includes("ABC") ? "ABC Corp" : "a vendor"} with the following information:
+          const hasAttachment = file && attachmentMetadata;
+          
+          if (hasAttachment) {
+            try {
+              const metadata = JSON.parse(attachmentMetadata as string);
+              const fileName = metadata.name;
+              
+              mockResponse = `I've received the file "${fileName}" and analyzed it. `;
+              
+              if (fileName.toLowerCase().includes("invoice")) {
+                mockResponse += `This appears to be an invoice with the following details:
 
 - Invoice #: INV-${Math.floor(Math.random() * 10000)}
 - Date: ${new Date().toLocaleDateString()}
@@ -134,6 +160,34 @@ const useAIChatStreamHandler = () => {
 - Due date: ${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString()}
 
 Would you like me to extract more details or process this for payment?`;
+              } else {
+                mockResponse += `This looks like a document that may contain financial information. Would you like me to:
+                
+1. Extract key data points
+2. Summarize the content
+3. Compare it with previous records
+4. Process it for payment
+
+Let me know how you'd like to proceed!`;
+              }
+            } catch (error) {
+              console.error("Error parsing attachment metadata:", error);
+              mockResponse = `I've received your file, but I'm having trouble processing it. Could you provide some details about what you'd like me to do with this document?`;
+            }
+          } else if (userMessage.toLowerCase().includes("invoice") || userMessage.toLowerCase().includes("process")) {
+            mockResponse = `I'm ready to help with your invoice. `;
+            
+            if (!hasAttachment) {
+              mockResponse += `To process an invoice, please attach the document using the clip icon in the chat input. 
+              
+Alternatively, you can describe the invoice details and I'll help you manually:
+
+- Invoice number
+- Vendor name
+- Amount
+- Date issued
+- Payment terms`;
+            }
           } else if (userMessage.toLowerCase().includes("payment") || userMessage.toLowerCase().includes("pay")) {
             mockResponse = `I've initiated the payment process for this invoice. The payment has been scheduled and will be processed within 3-5 business days. A confirmation email will be sent once the payment is complete.`;
           } else {
@@ -144,7 +198,7 @@ Would you like me to extract more details or process this for payment?`;
 - Expense categorization
 - Financial reporting
 
-How can I assist with your invoices today?`;
+How can I assist with your invoices today? Feel free to upload an invoice using the attachment button.`;
           }
           
           // Simulate streaming the response
